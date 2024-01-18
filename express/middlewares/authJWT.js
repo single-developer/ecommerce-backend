@@ -2,7 +2,6 @@ const jwt = require(`jsonwebtoken`);
 const supabase = require("../config/supabaseConfig");
 
 async function restrictToAccess(req, res, next) {
-  
   if (req.headers.authorization) {
     jwt.verify(
       req.headers.authorization.split(" ")[1],
@@ -15,15 +14,12 @@ async function restrictToAccess(req, res, next) {
           });
         }
 
-        req.user = decoded;
-
         const { data, error } = await supabase
           .from(`users`)
-          .select(`id, username`)
+          .select(`id, username, name`)
           .eq(`id`, decoded?.id);
 
-          
-
+        req.user = data[0];
         if (data.length === 0) {
           return res.status(400).json({
             success: false,

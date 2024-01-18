@@ -1,8 +1,6 @@
-const instance = require(`../services/razorpayService`);
+const router = require(`express`).Router();
+const { capturePayment } = require("../controllers/webhookController");
 
-async function webhooks(req, res, next) {
-  try {
-  } catch (error) {}
-}
+router.post(`/capture-payment`, capturePayment);
 
-module.exports = webhooks
+module.exports = router;

@@ -1,12 +1,17 @@
 const router = require(`express`).Router();
 const {
+  createCustomerController,
   orderCreateController,
-  orderConfirmController,
+  paymentLinkController,
+  qrCodePaymentController,
   getOrderController,
 } = require("../controllers/paymentController");
+const { restrictToAccess } = require("../middlewares/authJWT");
 
+router.post(`/create-customer`, restrictToAccess, createCustomerController);
 router.post(`/order-create`, orderCreateController);
-router.get(`/order-confirm`, orderConfirmController);
+router.post(`/payment-link`, paymentLinkController);
+router.post(`/qrCode-payment`, qrCodePaymentController);
 router.post(`/get-order`, getOrderController);
 // router.get(`/refund`, refundController);
 
