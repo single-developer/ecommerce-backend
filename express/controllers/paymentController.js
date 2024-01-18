@@ -1,5 +1,39 @@
 const instance = require(`../services/razorpayService`);
 
+async function createCustomerController(req, res, next) {
+  try {
+    const { name, username } = req.user;
+
+    console.log(req.user);
+
+    await instance.customers.create(
+      {
+        name: name,
+        email: username,
+      },
+      (err, customer) => {
+        if (err) {
+          return res.status(401).json({
+            success: false,
+            message: `Customer not created.`,
+          });
+        }
+
+        return res.status(200).json({
+          success: true,
+          customer,
+          message: `Customer created successfully.`,
+        });
+      }
+    );
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error,
+    });
+  }
+}
+
 async function orderCreateController(req, res, next) {
   try {
     const { amount, current } = req.body;
@@ -9,10 +43,10 @@ async function orderCreateController(req, res, next) {
       currency: current || `INR`,
     };
 
-    await instance.orders.create(options).then((paymentRes) => {
+    await instance.orders.create(options).then((orderRes) => {
       return res.status(200).json({
         success: true,
-        paymentRes,
+        orderRes,
       });
     });
   } catch (error) {
@@ -23,20 +57,60 @@ async function orderCreateController(req, res, next) {
   }
 }
 
-async function orderConfirmController(req, res, next) {
+async function paymentLinkController(req, res, next) {
   try {
-    const { orderId, signature } = req.query;
+    const { amount } = req.body;
 
-    const payment = await instance.orders.fetch(orderId);
+    const options = {
+      amount: amount || 100,
+      currency: `INR`,
+    };
 
-    const isValidSignature = await instance.webhooks.verifyPaymentSignature(
-      JSON.stringify(payment),
-      signature,
-      process.env.WEBHOOK_KEY_SECRET
-    );
+    await instance.paymentLink.create(options, (err, order) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          err,
+        });
+      }
 
-    return res.send(isValidSignature)
+      const paymentLink = order?.short_url;
+      console.log({ paymentLink });
 
+      return res.status(200).json({
+        success: true,
+        paymentLink: order,
+      });
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error,
+    });
+  }
+}
+
+async function qrCodePaymentController(req, res, next) {
+  try {
+    await instance.qrCode
+      .create({
+        type: "upi_qr",
+        name: "Store Front Display",
+        usage: "single_use",
+        fixed_amount: true,
+        payment_amount: 300,
+        description: "For Store 1",
+        customer_id: "cust_HKsR5se84c5LTO",
+        close_by: Math.floor(
+          new Date(new Date().getTime() + 15 * 60 * 1000).getTime() / 1000
+        ),
+        notes: {
+          purpose: "Test UPI QR Code notes",
+        },
+      })
+      .then((qrRes) => {
+        console.log(qrRes);
+      });
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -64,7 +138,9 @@ async function getOrderController(req, res, next) {
 }
 
 module.exports = {
+  createCustomerController,
   orderCreateController,
-  orderConfirmController,
+  paymentLinkController,
+  qrCodePaymentController,
   getOrderController,
 };

@@ -3,6 +3,7 @@ const Razorpay = require(`razorpay`);
 const instance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
+  webhook_secret : process.env.WEBHOOK_KEY_SECRET
 });
 
 module.exports = instance;
