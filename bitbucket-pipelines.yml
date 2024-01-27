@@ -3,10 +3,7 @@ pipelines:
       main:
         - step:
             name: Build and Deploy
-            script: 
-              - git init
-              - git add .
-              - git commit -m "Deploy to Github"
-              - git branch -M main
+            script:
               - git remote add origin https://github.com/single-developer/ecommerce-backend.git
+              - git branch -M main
               - git push -u origin main
