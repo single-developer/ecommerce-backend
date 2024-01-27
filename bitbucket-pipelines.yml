@@ -4,4 +4,11 @@ pipelines:
         - step:
             name: Build and Deploy
             script: 
-              - echo "<h1>Pipelines</h1>"
+              - npm install
+              - npm run build
+
+              - git init
+              - git add remote git remote add origin https://github.com/single-developer/ecommerce-backend.git
+              - git add .
+              - git commit -m "Deploy to Github"
+              - git push -f github deploy:master
