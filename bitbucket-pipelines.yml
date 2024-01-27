@@ -7,5 +7,6 @@ pipelines:
               - git init
               - git add .
               - git commit -m "Deploy to Github"
+              - git branch -M main
               - git remote add origin https://github.com/single-developer/ecommerce-backend.git
               - git push -u origin main
