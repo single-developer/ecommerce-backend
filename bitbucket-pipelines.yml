@@ -1,8 +1,7 @@
 pipelines:
-  default:
     branches:
       main:
         - step:
             name: Build and Deploy
             script: 
-              echo "<h1>Pipelines</h1>"
+              - echo "<h1>Pipelines</h1>"
