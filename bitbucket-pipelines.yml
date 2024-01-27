@@ -5,7 +5,7 @@ pipelines:
             name: Build and Deploy
             script: 
               - git init
-              - git remote add origin https://github.com/single-developer/ecommerce-backend.git
               - git add .
               - git commit -m "Deploy to Github"
-              - git push -f github deploy:master
+              - git remote add origin https://github.com/single-developer/ecommerce-backend.git
+              - git push -u origin main
