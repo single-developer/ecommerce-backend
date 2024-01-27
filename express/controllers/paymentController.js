@@ -1,3 +1,4 @@
+const supabase = require("../config/supabaseConfig");
 const instance = require(`../services/razorpayService`);
 
 async function createCustomerController(req, res, next) {
@@ -36,19 +37,57 @@ async function createCustomerController(req, res, next) {
 
 async function orderCreateController(req, res, next) {
   try {
-    const { amount, current } = req.body;
+    const { amount, currency } = req.body;
 
-    let options = {
-      amount: amount || 100,
-      currency: current || `INR`,
+    const customerDetails = {
+      name: req.user?.name || ``,
+      email: req.user?.username || ``,
+      contact: req.user?.contact || null,
     };
 
-    await instance.orders.create(options).then((orderRes) => {
-      return res.status(200).json({
-        success: true,
-        orderRes,
+    await supabase
+      .from(`customers`)
+      .select(`email`)
+      .eq(`email`, customerDetails?.email)
+      .then(async (customer) => {
+        if (customer.data.length === 0) {
+          await instance.customers
+            .create(customerDetails)
+            .then(async (customerRes) => {
+              customerDetails[`created_at`] = Date.now() || ``;
+              customerDetails[`customerId`] = customerRes.id || ``;
+
+              await supabase
+                .from(`customers`)
+                .insert(customerDetails)
+                .then(async (insertRes) => {})
+                .catch((error) => {
+                  return res.status(400).json({
+                    success: false,
+                    message: `Customer has been already exists.`,
+                  });
+                });
+            })
+            .catch((error) => {
+              return res.status(400).json({
+                success: false,
+                message: `"Customer already exists."`,
+              });
+            });
+        }
+
+        let orderDetails = {
+          amount: amount || 100,
+          currency: currency || `INR`,
+        };
+
+        await instance.orders.create(orderDetails).then((orderRes) => {
+          return res.status(200).json({
+            success: true,
+            orderRes,
+          });
+        });
       });
-    });
   } catch (error) {
     return res.status(500).json({
       success: false,

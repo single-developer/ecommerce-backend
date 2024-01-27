@@ -9,7 +9,7 @@ const {
 const { restrictToAccess } = require("../middlewares/authJWT");
 
 router.post(`/create-customer`, restrictToAccess, createCustomerController);
-router.post(`/order-create`, orderCreateController);
+router.post(`/order-create`, restrictToAccess, orderCreateController);
 router.post(`/payment-link`, paymentLinkController);
 router.post(`/qrCode-payment`, qrCodePaymentController);
 router.post(`/get-order`, getOrderController);

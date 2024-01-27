@@ -1,25 +1,34 @@
-const instance = require("../services/razorpayService");
+const supabase = require("../config/supabaseConfig");
 const crypto = require(`crypto`);
+const {
+  orderPaidEventController,
+} = require("./paymentEventsController/order.paid");
 
 async function capturePayment(req, res, next) {
   try {
-    const { payload } = req.body;
+    const body = JSON.stringify(req.body);
     const signature = req.get(`X-Razorpay-Signature`);
+    const { payload } = req.body;
+    const event = req.body?.event;
 
-    const orderId = payload?.payment_link?.entity?.order_id;
-    const order = await instance.orders.fetch(orderId);
+    const expectedSignature = crypto
+      .createHmac(`sha256`, process.env.WEBHOOK_KEY_SECRET)
+      .update(body)
+      .digest(`hex`);
 
-    console.log({ order });
-
-    const isValidSignature = await instance.webhooks.verify(
-      JSON.stringify(payload),
-      signature,
-      process.env.WEBHOOK_KEY_SECRET
-    );
-
-    console.log({ isValidSignature });
+    if (signature === expectedSignature) {
+      if (event === `order.paid`) {
+        const orderPaidRes = await orderPaidEventController(payload);
+        console.log({ orderPaidRes });
+      }
+    } else {
+      res.status(400).json({
+        success: false,
+        message: `Invalid Payment Signature`,
+      });
+    }
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       error,
     });
